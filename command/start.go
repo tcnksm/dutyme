@@ -39,7 +39,6 @@ func (c *StartCommand) Run(args []string) int {
 
 	cfg := &config.Config{}
 	if _, err := os.Stat(cfgPath); err == nil {
-		// TODO(tcnksm): When config file is broken, reset it?
 		var err error
 		cfg, err = config.ParseFile(cfgPath)
 		if err != nil {
@@ -58,19 +57,11 @@ func (c *StartCommand) Run(args []string) int {
 	}
 
 	if len(cfg.Token) == 0 {
-		query := "Input PagerDuty API token"
-		token, err := c.Meta.UI.Ask(query, &input.Options{
-			Required:  true,
-			Loop:      true,
-			HideOrder: true,
-			Mask:      true,
-		})
-
+		token, err := c.Meta.AskToken("")
 		if err != nil {
 			log.Fatal(err)
 			return ExitCodeError
 		}
-
 		cfg.Token = token
 	}
 
@@ -106,7 +97,6 @@ func (c *StartCommand) Run(args []string) int {
 		cfg.ScheduleID = scheduleID
 	}
 
-	// TODO(tcnksm): Ask before override
 	// TODO(tcnsm): Enable to set working time via flag
 	DefaultWorkingTime := 1 * time.Hour
 	start := time.Now()

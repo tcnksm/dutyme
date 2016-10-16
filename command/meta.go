@@ -43,6 +43,17 @@ func (m *Meta) ConfigPath() (string, error) {
 	return filepath.Join(home, DefaultConfigName), nil
 }
 
+func (m *Meta) AskToken(defaultToken string) (string, error) {
+	query := "Input PagerDuty API token"
+	return m.UI.Ask(query, &input.Options{
+		Default:   defaultToken,
+		Required:  true,
+		Loop:      true,
+		HideOrder: true,
+		Mask:      true,
+	})
+}
+
 func Debugf(format string, args ...interface{}) {
 	if Debug {
 		log.Printf("[DEBUG] "+format+"\n", args...)

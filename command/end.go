@@ -7,7 +7,6 @@ import (
 
 	"github.com/tcnksm/dutyme/config"
 	"github.com/tcnksm/dutyme/dutyme"
-	"github.com/tcnksm/go-input"
 )
 
 type EndCommand struct {
@@ -15,6 +14,12 @@ type EndCommand struct {
 }
 
 func (c *EndCommand) Run(args []string) int {
+
+	flags := c.Meta.NewFlagSet("end", c.Help())
+	if err := flags.Parse(args); err != nil {
+		return ExitCodeError
+	}
+
 	cfgPath, err := c.Meta.ConfigPath()
 	if err != nil {
 		log.Fatal(err)
@@ -42,19 +47,11 @@ func (c *EndCommand) Run(args []string) int {
 	}
 
 	if len(cfg.Token) == 0 {
-		query := "Input PagerDuty API token"
-		token, err := c.Meta.UI.Ask(query, &input.Options{
-			Required:  true,
-			Loop:      true,
-			HideOrder: true,
-			Mask:      true,
-		})
-
+		token, err := c.Meta.AskToken("")
 		if err != nil {
 			log.Fatal(err)
 			return ExitCodeError
 		}
-
 		cfg.Token = token
 	}
 
@@ -64,15 +61,18 @@ func (c *EndCommand) Run(args []string) int {
 		return ExitCodeError
 	}
 
+	// TODO(tcnksm): Ask before?
+
 	if err := pd.DeleteOverride(cfg.OverrideScheduleID, cfg.OverrideID); err != nil {
 		log.Fatal(err)
 		return ExitCodeError
 	}
 	log.Printf("Successfully delete override on %s", cfg.OverrideScheduleID)
 
-	// Remove existing override from config file.
-	cfg.OverrideID = ""
-	cfg.OverrideScheduleID = ""
+	if err := cfg.RemoveOverride(); err != nil {
+		log.Fatal(err)
+		return ExitCodeError
+	}
 
 	indent := true
 	if err := cfg.WriteFile(cfgPath, indent); err != nil {

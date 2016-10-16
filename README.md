@@ -1,8 +1,8 @@
 # dutyme
 
-> You should receive alerts while you're doing operation 
+> You should receive alerts while you're doing something on production. Take responsibility for it.
 
-`dutyme` assigns you on-call temporary. 
+`dutyme` assigns you 
 
 ## Usage
 

@@ -27,6 +27,12 @@ func (c *Config) IsOverrideExist() bool {
 	return c.OverrideID != "" && c.ScheduleID != ""
 }
 
+func (c *Config) RemoveOverride() error {
+	c.OverrideID = ""
+	c.OverrideScheduleID = ""
+	return nil
+}
+
 func (c *Config) WriteFile(path string, indent bool) error {
 	path, err := filepath.Abs(path)
 	if err != nil {
