@@ -6,6 +6,7 @@ import (
 
 	"github.com/mitchellh/cli"
 	"github.com/tcnksm/dutyme/command"
+	input "github.com/tcnksm/go-input"
 )
 
 func Run(args []string) int {
@@ -14,7 +15,11 @@ func Run(args []string) int {
 	meta := &command.Meta{
 		OutStream: os.Stdout,
 		ErrStream: os.Stderr,
-		InStream:  os.Stdin,
+
+		UI: &input.UI{
+			Writer: os.Stderr,
+			Reader: os.Stdin,
+		},
 	}
 
 	return RunCustom(args, Commands(meta))
