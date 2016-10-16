@@ -8,32 +8,40 @@ import (
 	"github.com/pkg/errors"
 )
 
-type Client struct {
-	PG *pagerduty.Client
+type PagerDuty interface {
+	GetUser(email string) (*pagerduty.APIObject, error)
+	GetSchedules(name string) ([]pagerduty.Schedule, error)
+	Override(scheduleID string, user pagerduty.APIObject, start, end time.Time) (*pagerduty.Override, error)
+	DeleteOverride(scheduleID, overrideID string) error
 }
 
-func NewClient(token string) (*Client, error) {
+type PDClient struct {
+	*pagerduty.Client
+}
+
+// NewPDClient creates new PagerDuty client
+func NewPDClient(token string) (PagerDuty, error) {
 	if len(token) == 0 {
 		return nil, errors.New("missing Pagerduty API token")
 	}
 	pg := pagerduty.NewClient(token)
-	return &Client{
-		PG: pg,
+	return &PDClient{
+		Client: pg,
 	}, nil
 }
 
-// FindUser finds user by the given email address and returns
+// GetUser gets a user by the given email address and returns
 // its APIObject (it represents user).
 //
 // FindUser assumes one email belongs to one user.
 // If it finds more than two, it fails.
-func (c *Client) FindUser(email string) (*pagerduty.APIObject, error) {
+func (c *PDClient) GetUser(email string) (*pagerduty.APIObject, error) {
 	if len(email) == 0 {
 		return nil, errors.New("missing pagerduty account email")
 	}
 
 	// TODO(tcnksm): More strict search?
-	res, err := c.PG.ListUsers(pagerduty.ListUsersOptions{
+	res, err := c.ListUsers(pagerduty.ListUsersOptions{
 		Query: email,
 	})
 
@@ -60,13 +68,15 @@ func (c *Client) FindUser(email string) (*pagerduty.APIObject, error) {
 	return &users[0].APIObject, nil
 }
 
-func (c *Client) ListSchedules(name string) ([]pagerduty.Schedule, error) {
+// GetSchecules finds Pagerduty schedules by querying the given name.
+// If any or found nothing, returns error.
+func (c *PDClient) GetSchedules(name string) ([]pagerduty.Schedule, error) {
 	if len(name) == 0 {
-		// return nil, errors.New("missing schedule name")
+		return nil, errors.New("missing schedule name")
 	}
 
 	// TODO(tcnksm): More strict search?
-	res, err := c.PG.ListSchedules(pagerduty.ListSchedulesOptions{
+	res, err := c.ListSchedules(pagerduty.ListSchedulesOptions{
 		Query: name,
 	})
 	if err != nil {
@@ -81,7 +91,7 @@ func (c *Client) ListSchedules(name string) ([]pagerduty.Schedule, error) {
 	return schedules, nil
 }
 
-func (c *Client) Override(scheduleID string, user pagerduty.APIObject, start, end time.Time) (*pagerduty.Override, error) {
+func (c *PDClient) Override(scheduleID string, user pagerduty.APIObject, start, end time.Time) (*pagerduty.Override, error) {
 	if len(scheduleID) == 0 {
 		return nil, errors.New("misssing scheduleID")
 	}
@@ -95,7 +105,7 @@ func (c *Client) Override(scheduleID string, user pagerduty.APIObject, start, en
 	}
 
 	// TODO(tcnksm): Handle when user is already persion in charge.
-	override, err := c.PG.CreateOverride(scheduleID, pagerduty.Override{
+	override, err := c.CreateOverride(scheduleID, pagerduty.Override{
 		Start: start.String(),
 		End:   end.String(),
 		User:  user,
@@ -108,7 +118,7 @@ func (c *Client) Override(scheduleID string, user pagerduty.APIObject, start, en
 	return override, nil
 }
 
-func (c *Client) DeleteOverride(scheduleID, overrideID string) error {
+func (c *PDClient) DeleteOverride(scheduleID, overrideID string) error {
 	if len(scheduleID) == 0 {
 		return errors.New("missing schedule ID")
 	}
@@ -117,7 +127,7 @@ func (c *Client) DeleteOverride(scheduleID, overrideID string) error {
 		return errors.New("missing override ID")
 	}
 
-	if err := c.PG.DeleteOverride(scheduleID, overrideID); err != nil {
+	if err := c.DeleteOverride(scheduleID, overrideID); err != nil {
 		return errors.Wrap(err, "PagerDuty API request failed: DeleteOverride")
 	}
 

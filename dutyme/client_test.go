@@ -22,8 +22,8 @@ const (
 	EnvTestScheduleID = "TEST_PG_SCID"
 )
 
-func testNewClient(t *testing.T) *Client {
-	client, err := NewClient(TestToken)
+func testNewClient(t *testing.T) PagerDuty {
+	client, err := NewPDClient(TestToken)
 	if err != nil {
 		t.Fatal("NewClient failed:", err)
 	}
@@ -31,31 +31,31 @@ func testNewClient(t *testing.T) *Client {
 	return client
 }
 
-func TestFindUser(t *testing.T) {
+func TestFGetUser(t *testing.T) {
 	client := testNewClient(t)
 
 	email := "cunningham@pagerduty.com"
-	user, err := client.FindUser(email)
+	user, err := client.GetUser(email)
 	if err != nil {
-		t.Fatal("FindUser failed:", err)
+		t.Fatal("GetUser failed:", err)
 	}
 
 	if got, want := user.ID, "PGJ36Z3"; got != want {
-		t.Fatalf("FindUser: user.ID = %s;  want %s", got, want)
+		t.Fatalf("GetUser: user.ID = %s;  want %s", got, want)
 	}
 }
 
-func TestListSchedule(t *testing.T) {
+func TestGetSchedules(t *testing.T) {
 	client := testNewClient(t)
 
 	name := "BoothDuty"
-	schedules, err := client.ListSchedules(name)
+	schedules, err := client.GetSchedules(name)
 	if err != nil {
-		t.Fatal("ListSchedule failed:", err)
+		t.Fatal("GetSchedules failed:", err)
 	}
 
 	if got, want := len(schedules), 2; got != want {
-		t.Fatalf("ListSchedule number = %d; want %d", got, want)
+		t.Fatalf("GetSchedules number = %d; want %d", got, want)
 	}
 }
 
@@ -71,12 +71,12 @@ func TestCreateOverride(t *testing.T) {
 	}
 	t.Skip("TODO: Drop this!")
 
-	client, err := NewClient(token)
+	client, err := NewPDClient(token)
 	if err != nil {
 		t.Fatal("NewClient failed:", err)
 	}
 
-	user, err := client.FindUser(email)
+	user, err := client.GetUser(email)
 	if err != nil {
 		t.Fatal("FindUser failed:", err)
 	}
