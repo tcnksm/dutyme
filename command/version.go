@@ -14,14 +14,14 @@ type VersionCommand struct {
 }
 
 func (c *VersionCommand) Run(args []string) int {
-	var versionString bytes.Buffer
+	var buf bytes.Buffer
 
-	fmt.Fprintf(&versionString, "%s version %s", c.Name, c.Version)
+	fmt.Fprintf(&buf, "%s version %s", c.Name, c.Version)
 	if c.Revision != "" {
-		fmt.Fprintf(&versionString, " (%s)", c.Revision)
+		fmt.Fprintf(&buf, " (%s)", c.Revision)
 	}
 
-	c.Ui.Output(versionString.String())
+	fmt.Fprintln(c.OutStream, buf.String())
 	return 0
 }
 

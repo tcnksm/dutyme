@@ -1,8 +1,10 @@
 package command
 
-import "github.com/mitchellh/cli"
+import "io"
 
 // Meta contain the meta-option that nearly all subcommand inherited.
 type Meta struct {
-	Ui cli.Ui
+	OutStream io.Writer
+	ErrStream io.Writer
+	InStream  io.Reader
 }
