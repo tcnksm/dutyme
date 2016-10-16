@@ -6,15 +6,14 @@ import (
 	"os"
 	"path/filepath"
 
-	"github.com/PagerDuty/go-pagerduty"
 	"github.com/pkg/errors"
+	"github.com/tcnksm/dutyme/dutyme"
 )
 
 type Config struct {
 	Token string `json:"token,omitempty"`
 
-	Email string              `json:"email,omitempty"`
-	User  pagerduty.APIObject `json:"user,omitempty"`
+	User *dutyme.User `json:"user,omitempty"`
 
 	ScheduleName string `json:"schedule_name,omitempty"`
 	ScheduleID   string `json:"schedule_id,omitempty"`
@@ -23,7 +22,12 @@ type Config struct {
 	OverrideScheduleID string `json:"override_schedule_Id,omitempty"`
 }
 
-func WriteFile(path string, config *Config) error {
+func (c *Config) IsOverrideExist() bool {
+	// TODO(tcnksm): Check by time
+	return c.OverrideID != "" && c.ScheduleID != ""
+}
+
+func (c *Config) WriteFile(path string, indent bool) error {
 	path, err := filepath.Abs(path)
 	if err != nil {
 		return errors.Wrap(err, "faield to get abs path")
@@ -35,14 +39,20 @@ func WriteFile(path string, config *Config) error {
 	}
 	defer f.Close()
 
-	return write(f, config)
+	return c.write(f, indent)
 }
 
-func write(wr io.Writer, config *Config) error {
+func (c *Config) write(wr io.Writer, indent bool) error {
 	encoder := json.NewEncoder(wr)
-	if err := encoder.Encode(config); err != nil {
+
+	if indent {
+		encoder.SetIndent("", "  ")
+	}
+
+	if err := encoder.Encode(c); err != nil {
 		return errors.Wrap(err, "failed to encode json")
 	}
+
 	return nil
 }
 

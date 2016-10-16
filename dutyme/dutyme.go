@@ -1,7 +1,6 @@
 package dutyme
 
 import (
-	"github.com/PagerDuty/go-pagerduty"
 	"github.com/pkg/errors"
 	"github.com/tcnksm/go-gitconfig"
 	"github.com/tcnksm/go-input"
@@ -12,13 +11,13 @@ type Dutyme struct {
 	UI *input.UI
 }
 
-func (d *Dutyme) GetUser(defaultEmail string) (*pagerduty.APIObject, error) {
+func (d *Dutyme) GetUser(defaultEmail string) (*User, error) {
 	if len(defaultEmail) == 0 {
 		// PD email address may be same as git email address
 		defaultEmail, _ = gitconfig.Email()
 	}
 
-	query := "Input Pagerduty account email address"
+	query := "Input PagerDuty account email address"
 	email, err := d.UI.Ask(query, &input.Options{
 		Default:   defaultEmail,
 		Required:  true,
@@ -34,7 +33,7 @@ func (d *Dutyme) GetUser(defaultEmail string) (*pagerduty.APIObject, error) {
 }
 
 func (d *Dutyme) GetSchedule(defaultQuery string) (string, string, error) {
-	query := "Input Pagerduty schedule name which you want to override"
+	query := "Input PagerDuty schedule name which you want to override"
 	scheduleQuery, err := d.UI.Ask(query, &input.Options{
 		Default:   defaultQuery,
 		Required:  true,

@@ -24,7 +24,7 @@ func TestDutyme_GetUser(t *testing.T) {
 		t.Fatal("GetUser failed:", err)
 	}
 
-	if got, want := user.ID, "PGJ36Z3"; got != want {
+	if got, want := user.Obj.ID, "PGJ36Z3"; got != want {
 		t.Fatalf("GetUser: user.ID = %s;  want %s", got, want)
 	}
 }
@@ -44,7 +44,7 @@ func TestDutyme_GetUser_default(t *testing.T) {
 		t.Fatal("GetUser failed:", err)
 	}
 
-	if got, want := user.ID, "PGJ36Z3"; got != want {
+	if got, want := user.Obj.ID, "PGJ36Z3"; got != want {
 		t.Fatalf("GetUser: user.ID = %s;  want %s", got, want)
 	}
 }

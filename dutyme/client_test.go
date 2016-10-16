@@ -40,7 +40,7 @@ func TestFGetUser(t *testing.T) {
 		t.Fatal("GetUser failed:", err)
 	}
 
-	if got, want := user.ID, "PGJ36Z3"; got != want {
+	if got, want := user.Obj.ID, "PGJ36Z3"; got != want {
 		t.Fatalf("GetUser: user.ID = %s;  want %s", got, want)
 	}
 }
@@ -83,7 +83,7 @@ func TestCreateOverride(t *testing.T) {
 
 	start := time.Now()
 	end := start.Add(1 * time.Hour)
-	override, err := client.Override(scheduleID, *user, start, end)
+	override, err := client.Override(scheduleID, user, start, end)
 	if err != nil {
 		t.Fatal("Override failed:", err)
 	}
