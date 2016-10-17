@@ -15,22 +15,8 @@ type Config struct {
 
 	User *dutyme.User `json:"user,omitempty"`
 
-	ScheduleName string `json:"schedule_name,omitempty"`
 	ScheduleID   string `json:"schedule_id,omitempty"`
-
-	OverrideID         string `json:"override_id,omitempty"`
-	OverrideScheduleID string `json:"override_schedule_Id,omitempty"`
-}
-
-func (c *Config) IsOverrideExist() bool {
-	// TODO(tcnksm): Check by time
-	return c.OverrideID != "" && c.ScheduleID != ""
-}
-
-func (c *Config) RemoveOverride() error {
-	c.OverrideID = ""
-	c.OverrideScheduleID = ""
-	return nil
+	ScheduleName string `json:"schedule_name,omitempty"`
 }
 
 func (c *Config) WriteFile(path string, indent bool) error {
