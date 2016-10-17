@@ -47,11 +47,6 @@ func (c *StartCommand) Run(args []string) int {
 		}
 	}
 
-	if cfg.IsOverrideExist() {
-		log.Fatal("Override already exists. Run 'end' command and finish it before.")
-		return ExitCodeError
-	}
-
 	if v := os.Getenv(EnvToken); len(v) != 0 {
 		cfg.Token = v
 	}
@@ -102,9 +97,17 @@ func (c *StartCommand) Run(args []string) int {
 	start := time.Now()
 	end := start.Add(DefaultWorkingTime)
 
+	force := false
 	log.Printf("Override user %q to schedule %q from %s to %s",
 		cfg.User.Email, cfg.ScheduleName, start, end)
-	query := fmt.Sprintf("OK to override? [Y/n]")
+	override, err := dutyme.Override(cfg.ScheduleID, cfg.User, start, end, force)
+	if err != nil {
+		log.Fatal(err)
+		return ExitCodeError
+	}
+	log.Println("Successfuly overrided:", override.ID)
+
+	query := "Want to save login info? (you can skip input from next time) [Y/n]"
 	ans, err := c.Meta.UI.Ask(query, &input.Options{
 		Default:     "Y",
 		Loop:        true,
@@ -119,39 +122,7 @@ func (c *StartCommand) Run(args []string) int {
 	})
 
 	if ans == "N" || ans == "n" {
-		log.Fatal("terminated...")
-		return ExitCodeError
-	}
-
-	override, err := dutyme.PD.Override(cfg.ScheduleID, cfg.User, start, end)
-	if err != nil {
-		log.Fatal(err)
-		return ExitCodeError
-	}
-	log.Println("Successfuly assigned")
-
-	query = "Want to save configuration? (you can skip input from next time) [Y/n]"
-	ans, err = c.Meta.UI.Ask(query, &input.Options{
-		Default:     "Y",
-		Loop:        true,
-		HideOrder:   true,
-		HideDefault: true,
-		ValidateFunc: func(s string) error {
-			if s != "Y" && s != "y" && s != "N" && s != "n" {
-				return fmt.Errorf("input must be Y or n")
-			}
-			return nil
-		},
-	})
-
-	if ans == "N" || ans == "n" {
-		cfg = &config.Config{
-			OverrideID:         override.ID,
-			OverrideScheduleID: cfg.ScheduleID,
-		}
-	} else {
-		cfg.OverrideID = override.ID
-		cfg.OverrideScheduleID = cfg.ScheduleID
+		return ExitCodeOK
 	}
 
 	indent := true
