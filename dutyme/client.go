@@ -11,15 +11,18 @@ import (
 type PagerDuty interface {
 	GetUser(email string) (*User, error)
 	GetSchedules(name string) ([]pagerduty.Schedule, error)
+	GetOverrides(scheduleID string, since, until time.Time) ([]pagerduty.Override, error)
 	Override(scheduleID string, user *User, start, end time.Time) (*pagerduty.Override, error)
 	DeleteOverride(scheduleID, overrideID string) error
 }
 
+// User represents pagerduty user
 type User struct {
 	Email string
 	Obj   *pagerduty.APIObject
 }
 
+// PDClient is actual pagerduty client which implements PagerDuty interface.
 type PDClient struct {
 	*pagerduty.Client
 }
@@ -99,6 +102,29 @@ func (c *PDClient) GetSchedules(name string) ([]pagerduty.Schedule, error) {
 	return schedules, nil
 }
 
+func (c *PDClient) GetOverrides(scheduleID string, since, until time.Time) ([]pagerduty.Override, error) {
+	if len(scheduleID) == 0 {
+		return nil, errors.New("misssing scheduleID")
+	}
+
+	overrides, err := c.ListOverrides(scheduleID, pagerduty.ListOverridesOptions{
+		Since:    since.String(),
+		Until:    until.String(),
+		Editable: true,
+		Overflow: true,
+	})
+
+	if err != nil {
+		return nil, errors.Wrap(err, "PagerDuty API request failed: ListOverrides")
+	}
+
+	if len(overrides) == 0 {
+		return nil, &errNotFound{"no overrides are found"}
+	}
+
+	return overrides, nil
+}
+
 func (c *PDClient) Override(scheduleID string, user *User, start, end time.Time) (*pagerduty.Override, error) {
 	if len(scheduleID) == 0 {
 		return nil, errors.New("misssing scheduleID")
@@ -140,4 +166,28 @@ func (c *PDClient) DeleteOverride(scheduleID, overrideID string) error {
 	}
 
 	return nil
+}
+
+type notfound interface {
+	NotFound() bool
+}
+
+// IsNotFound returns true if err inplements notfound interface
+// and NotFound returns true.
+func IsNotFound(err error) bool {
+	i, ok := err.(notfound)
+	return ok && i.NotFound()
+}
+
+// errNotFound is special error when API requests found no resources.
+type errNotFound struct {
+	msg string
+}
+
+func (e *errNotFound) Error() string {
+	return e.msg
+}
+
+func (e *errNotFound) NotFound() bool {
+	return true
 }

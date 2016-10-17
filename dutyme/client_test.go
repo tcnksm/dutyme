@@ -69,7 +69,7 @@ func TestCreateOverride(t *testing.T) {
 			"For TestCreateOverride you must set env vars: %q, %q, %q",
 			EnvTestToken, EnvTestEmail, EnvTestScheduleID)
 	}
-	t.Skip("TODO: Drop this!")
+	// t.Skip("TODO: Drop this!")
 
 	client, err := NewPDClient(token)
 	if err != nil {
@@ -88,7 +88,35 @@ func TestCreateOverride(t *testing.T) {
 		t.Fatal("Override failed:", err)
 	}
 
+	var skipDefer bool
+	defer func() {
+		if skipDefer {
+			return
+		}
+
+		if err := client.DeleteOverride(scheduleID, override.ID); err != nil {
+			t.Fatal("Delete Override failed:", err)
+		}
+	}()
+
+	since := time.Now()
+	until := since.Add(1 * time.Hour)
+	overrides, err := client.GetOverrides(scheduleID, since, until)
+	if err != nil {
+		t.Fatal("GetOverrides failed:", err)
+	}
+
+	if got, want := len(overrides), 1; got != want {
+		t.Fatalf("GetOverrides number = %d, want %d", got, want)
+	}
+
 	if err := client.DeleteOverride(scheduleID, override.ID); err != nil {
 		t.Fatal("Delete Override failed:", err)
+	}
+	skipDefer = true
+
+	_, err = client.GetOverrides(scheduleID, since, until)
+	if !IsNotFound(err) {
+		t.Fatalf("expect %s to be NotFound error", err)
 	}
 }

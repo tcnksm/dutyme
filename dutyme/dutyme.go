@@ -1,6 +1,11 @@
 package dutyme
 
 import (
+	"fmt"
+	"strings"
+	"time"
+
+	pagerduty "github.com/PagerDuty/go-pagerduty"
 	"github.com/pkg/errors"
 	"github.com/tcnksm/go-gitconfig"
 	"github.com/tcnksm/go-input"
@@ -80,4 +85,67 @@ func (d *Dutyme) GetSchedule(defaultQuery string) (string, string, error) {
 	}
 
 	return name, ID, nil
+}
+
+func (d *Dutyme) Override(scheduleID string, user *User, start, end time.Time, force bool) (*pagerduty.Override, error) {
+
+	if !force {
+		query := fmt.Sprintf("OK to override? [Y/n]")
+		ans, err := d.UI.Ask(query, &input.Options{
+			Default:     "Y",
+			Loop:        true,
+			HideOrder:   true,
+			HideDefault: true,
+			ValidateFunc: func(s string) error {
+				if s != "Y" && s != "y" && s != "N" && s != "n" {
+					return fmt.Errorf("input must be Y or n")
+				}
+				return nil
+			},
+		})
+
+		if err != nil {
+			return nil, errors.Wrap(err, "failed to ask")
+		}
+
+		if ans == "N" || ans == "n" {
+			return nil, errors.New("cancel override")
+		}
+	}
+
+	return d.PD.Override(scheduleID, user, start, end)
+}
+
+func (d *Dutyme) GetOverride(scheduleID string, user *User, since, until time.Time) (string, error) {
+	overrides, err := d.PD.GetOverrides(scheduleID, since, until)
+	if err != nil {
+		return "", err
+	}
+
+	targets := make([]string, 0, len(overrides))
+	for _, override := range overrides {
+		// Filter override by user
+		if override.User.ID == user.Obj.ID {
+			s := fmt.Sprintf("%s: %s - %s", override.ID, override.Start, override.End)
+			targets = append(targets, s)
+		}
+	}
+
+	var target string
+	if len(targets) > 1 {
+		var err error
+		query := "Found multiple overrides. Select one."
+		target, err = d.UI.Select(query, targets, &input.Options{
+			Default: targets[0],
+			Loop:    true,
+		})
+		if err != nil {
+			return "", errors.Wrap(err, "failed to select override from the given list")
+		}
+
+	} else {
+		target = targets[0]
+	}
+
+	return target[:strings.Index(target, ":")], nil
 }

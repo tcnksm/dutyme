@@ -3,7 +3,9 @@ package dutyme
 import (
 	"bytes"
 	"io/ioutil"
+	"os"
 	"testing"
+	"time"
 
 	"github.com/tcnksm/go-input"
 )
@@ -75,7 +77,6 @@ func TestDutyme_GetSchedule(t *testing.T) {
 }
 
 func TestDutyme_GetSchedule_withoutAsking(t *testing.T) {
-	t.Skip("TODO: need to fix when query includes space")
 	d := Dutyme{
 		UI: &input.UI{
 			Writer: ioutil.Discard,
@@ -98,4 +99,134 @@ func TestDutyme_GetSchedule_withoutAsking(t *testing.T) {
 		t.Fatalf("GetSchedule name = %q, want %q", name, want)
 	}
 
+}
+
+func TestGetOverride(t *testing.T) {
+	token := os.Getenv(EnvTestToken)
+	email := os.Getenv(EnvTestEmail)
+	scheduleID := os.Getenv(EnvTestScheduleID)
+
+	if len(token) == 0 || len(email) == 0 || len(scheduleID) == 0 {
+		t.Skipf(
+			"For TestCreateOverride you must set env vars: %q, %q, %q",
+			EnvTestToken, EnvTestEmail, EnvTestScheduleID)
+	}
+
+	shiftDuration := 5 * time.Hour
+	client, err := NewPDClient(token)
+	if err != nil {
+		t.Fatal("NewClient failed:", err)
+	}
+
+	d := Dutyme{
+		UI: &input.UI{
+			Writer: ioutil.Discard,
+			Reader: bytes.NewBufferString("1\n"),
+		},
+		PD: client,
+	}
+
+	user, err := client.GetUser(email)
+	if err != nil {
+		t.Fatal("GetUser failed:", err)
+	}
+
+	// Create 2 overrides
+	start := time.Now()
+	start.Add(shiftDuration)
+	end := start.Add(5 * time.Minute)
+	override1, err := client.Override(scheduleID, user, start, end)
+	if err != nil {
+		t.Fatal("Override failed:", err)
+	}
+
+	defer func() {
+		if err := client.DeleteOverride(scheduleID, override1.ID); err != nil {
+			t.Fatal("Delete Override failed:", err)
+		}
+	}()
+
+	start = time.Now().Add(1 * time.Hour)
+	start.Add(shiftDuration)
+	end = start.Add(5 * time.Minute)
+	override2, err := client.Override(scheduleID, user, start, end)
+	if err != nil {
+		t.Fatal("Override failed:", err)
+	}
+
+	defer func() {
+		if err := client.DeleteOverride(scheduleID, override2.ID); err != nil {
+			t.Fatal("Delete Override failed:", err)
+		}
+	}()
+
+	since := time.Now()
+	since.Add(shiftDuration)
+	until := since.Add(3 * time.Hour)
+	overrideID, err := d.GetOverride(scheduleID, user, since, until)
+	if err != nil {
+		t.Fatal("GetOverride failed:", err)
+	}
+
+	if overrideID != override1.ID {
+		t.Fatalf("expect %s to be eq %s", overrideID, override1.ID)
+	}
+}
+
+func TestGetOverride_withoutAsking(t *testing.T) {
+	token := os.Getenv(EnvTestToken)
+	email := os.Getenv(EnvTestEmail)
+	scheduleID := os.Getenv(EnvTestScheduleID)
+
+	if len(token) == 0 || len(email) == 0 || len(scheduleID) == 0 {
+		t.Skipf(
+			"For TestCreateOverride you must set env vars: %q, %q, %q",
+			EnvTestToken, EnvTestEmail, EnvTestScheduleID)
+	}
+
+	shiftDuration := 3 * time.Hour
+	client, err := NewPDClient(token)
+	if err != nil {
+		t.Fatal("NewClient failed:", err)
+	}
+
+	d := Dutyme{
+		UI: &input.UI{
+			Writer: ioutil.Discard,
+			Reader: bytes.NewBufferString("\n"),
+		},
+		PD: client,
+	}
+
+	user, err := client.GetUser(email)
+	if err != nil {
+		t.Fatal("GetUser failed:", err)
+	}
+
+	// Create 1 overrides
+	start := time.Now()
+	start.Add(shiftDuration)
+	end := start.Add(1 * time.Hour)
+	override, err := client.Override(scheduleID, user, start, end)
+	if err != nil {
+		t.Fatal("Override failed:", err)
+	}
+
+	defer func() {
+		if err := client.DeleteOverride(scheduleID, override.ID); err != nil {
+			t.Fatal("Delete Override failed:", err)
+		}
+	}()
+
+	since := time.Now()
+	since.Add(shiftDuration)
+	until := since.Add(1 * time.Hour)
+	overrideID, err := d.GetOverride(scheduleID, user, since, until)
+	if err != nil {
+		t.Fatal("GetOverride failed:", err)
+	}
+
+	if overrideID != override.ID {
+		t.Fatalf("expect %q to be eq %q", overrideID, override.ID)
+	}
 }
