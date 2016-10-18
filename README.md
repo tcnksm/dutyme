@@ -2,14 +2,30 @@
 
 > You should receive alerts while you're doing something on production. Take responsibility for it.
 
-`dutyme` assigns you 
+`dutyme` assigns PagerDuty on-call to yourself temporarily while operation. It creates [override layer](https://support.pagerduty.com/hc/en-us/articles/202830170-Creating-and-Deleting-Overrides) on the existing schedule. 
+
+*NOTE*: `dutyme` is still under development. command interface maybe updated in future.
 
 ## Usage
 
-```
+To assign, use `start` command,
+
+```bash
 $ dutyme start
-$ dutyme end
 ```
+
+It asks all necessary infomation to override (your PagerDuty email address or schedule name to override) 
+and creates override layer. After executing, all infomation will be saved on disk so you can skip input from next time.
+
+By default, it overrides 1 hour. You can change it via `-working` flag.
+
+```bash
+$ dutyme start -working 30m
+```
+
+## Token
+
+To use dutyme command, you need a PagerDuty API v2 token. The token must have full access to read, write, update, and delete. Only account administrators have the ability to generate token. (See more about token on official doc https://goo.gl/VPvlwB)
 
 ## Install
 
