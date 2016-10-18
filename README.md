@@ -6,6 +6,8 @@
 
 `dutyme` assigns PagerDuty on-call to yourself temporarily while operation. It creates [override layer](https://support.pagerduty.com/hc/en-us/articles/202830170-Creating-and-Deleting-Overrides) on the existing schedule. *NOTE*: `dutyme` is still under development. command interface maybe updated in future.
 
+![](/doc/dutyme.gif)
+
 ## Requirement
 
 To use dutyme command, you need a PagerDuty API v2 token. 
