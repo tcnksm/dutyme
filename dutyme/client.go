@@ -168,15 +168,15 @@ func (c *PDClient) DeleteOverride(scheduleID, overrideID string) error {
 	return nil
 }
 
-type notfound interface {
-	NotFound() bool
-}
-
 // IsNotFound returns true if err inplements notfound interface
 // and NotFound returns true.
-func IsNotFound(err error) bool {
+func isNotFound(err error) bool {
 	i, ok := err.(notfound)
 	return ok && i.NotFound()
+}
+
+type notfound interface {
+	NotFound() bool
 }
 
 // errNotFound is special error when API requests found no resources.

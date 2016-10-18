@@ -116,7 +116,7 @@ func TestCreateOverride(t *testing.T) {
 	skipDefer = true
 
 	_, err = client.GetOverrides(scheduleID, since, until)
-	if !IsNotFound(err) {
+	if !isNotFound(err) {
 		t.Fatalf("expect %s to be NotFound error", err)
 	}
 }

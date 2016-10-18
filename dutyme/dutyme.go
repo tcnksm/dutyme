@@ -5,7 +5,7 @@ import (
 	"strings"
 	"time"
 
-	pagerduty "github.com/PagerDuty/go-pagerduty"
+	"github.com/PagerDuty/go-pagerduty"
 	"github.com/pkg/errors"
 	"github.com/tcnksm/go-gitconfig"
 	"github.com/tcnksm/go-input"
@@ -109,7 +109,7 @@ func (d *Dutyme) Override(scheduleID string, user *User, start, end time.Time, f
 		}
 
 		if ans == "N" || ans == "n" {
-			return nil, errors.New("cancel override")
+			return nil, &errCancel{}
 		}
 	}
 
@@ -148,4 +148,15 @@ func (d *Dutyme) GetOverride(scheduleID string, user *User, since, until time.Ti
 	}
 
 	return target[:strings.Index(target, ":")], nil
+}
+
+// errCancel implements isCancel interface.
+type errCancel struct{}
+
+func (_ *errCancel) Error() string {
+	return "canceled"
+}
+
+func (_ *errCancel) IsCancel() bool {
+	return true
 }
