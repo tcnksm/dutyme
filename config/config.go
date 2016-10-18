@@ -19,6 +19,10 @@ type Config struct {
 	ScheduleName string `json:"schedule_name,omitempty"`
 }
 
+func (c *Config) IsEmpty() bool {
+	return c.User == nil && c.ScheduleID == ""
+}
+
 func (c *Config) WriteFile(path string, indent bool) error {
 	path, err := filepath.Abs(path)
 	if err != nil {
