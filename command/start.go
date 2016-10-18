@@ -29,7 +29,7 @@ func (c *StartCommand) Synopsis() string {
 func (c *StartCommand) Help() string {
 	helpText := fmt.Sprintf(`Usage: dutyme start [options...]
 
-start overrides the schedule and assign on-call to you. By default,
+start overrides the schedule and assigns on-call to you. By default,
 it creates 1 hour override (you can change this via -working option).
 
 To use dutyme command, you need a PagerDuty API v2 token.
