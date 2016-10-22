@@ -1,8 +1,9 @@
-# dutyme [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license]
+# dutyme [![Build Status](http://img.shields.io/travis/tcnksm/dutyme.svg?style=flat-square)][travis] [![MIT License](http://img.shields.io/badge/license-MIT-blue.svg?style=flat-square)][license]
 
+[travis]: https://travis-ci.org/tcnksm/dutyme
 [license]: https://github.com/tcnksm/dutyme/blob/master/LICENSE
 
-> You should receive alerts while you're doing something on production. Take responsibility for it.
+> You should receive alerts while operation on production. Take responsibility for it.
 
 `dutyme` assigns PagerDuty on-call to yourself temporarily while operation. It creates [override layer](https://support.pagerduty.com/hc/en-us/articles/202830170-Creating-and-Deleting-Overrides) on the existing schedule. *NOTE*: `dutyme` is still under development. command interface maybe updated in future.
 
