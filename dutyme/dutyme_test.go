@@ -10,95 +10,101 @@ import (
 	"github.com/tcnksm/go-input"
 )
 
-func TestDutyme_GetUser(t *testing.T) {
-	email := "cunningham@pagerduty.com"
-	d := Dutyme{
+func testNewDutyme(t *testing.T, token, inputStr string) Dutyme {
+	return Dutyme{
 		UI: &input.UI{
 			Writer: ioutil.Discard,
-			Reader: bytes.NewBufferString(email),
+			Reader: bytes.NewBufferString(inputStr),
 		},
-		PD: testNewClient(t),
+		PD: testNewClient(t, token),
 	}
+}
 
-	defaultEmail := ""
-	user, err := d.GetUser(defaultEmail)
+func TestDutyme_GetUser(t *testing.T) {
+	d := testNewDutyme(t, "", testEmail)
+	user, err := d.GetUser("")
 	if err != nil {
 		t.Fatal("GetUser failed:", err)
 	}
 
-	if got, want := user.Obj.ID, "PGJ36Z3"; got != want {
+	if got, want := user.Obj.ID, testUserID; got != want {
 		t.Fatalf("GetUser: user.ID = %s;  want %s", got, want)
 	}
 }
 
 func TestDutyme_GetUser_default(t *testing.T) {
-	d := Dutyme{
-		UI: &input.UI{
-			Writer: ioutil.Discard,
-			Reader: bytes.NewBufferString("\n"),
-		},
-		PD: testNewClient(t),
-	}
-
-	defaultEmail := "cunningham@pagerduty.com"
-	user, err := d.GetUser(defaultEmail)
+	d := testNewDutyme(t, "", "\n")
+	user, err := d.GetUser(testEmail)
 	if err != nil {
 		t.Fatal("GetUser failed:", err)
 	}
 
-	if got, want := user.Obj.ID, "PGJ36Z3"; got != want {
+	if got, want := user.Obj.ID, testUserID; got != want {
 		t.Fatalf("GetUser: user.ID = %s;  want %s", got, want)
 	}
 }
 
 func TestDutyme_GetSchedule(t *testing.T) {
-	d := Dutyme{
-		UI: &input.UI{
-			Writer: ioutil.Discard,
-			Reader: bytes.NewBufferString("BoothDuty\n1\n"),
-		},
-		PD: testNewClient(t),
-	}
-
-	defaultQuery := ""
-	name, id, err := d.GetSchedule(defaultQuery)
+	d := testNewDutyme(t, "", "Dutyme\n1\n")
+	name, id, err := d.GetSchedule("")
 	if err != nil {
 		t.Fatal("GetSchedule failed:", err)
 	}
 
-	if want := "PKM7ZY1"; id != want {
+	if want := testScheduleID1; id != want {
 		t.Fatalf("GetSchedule ID = %q, want %q", id, want)
 	}
 
-	if want := "BoothDuty Primary"; name != want {
+	if want := testScheduleName1; name != want {
 		t.Fatalf("GetSchedule name = %q, want %q", name, want)
 	}
-
 }
 
 func TestDutyme_GetSchedule_withoutAsking(t *testing.T) {
-	d := Dutyme{
-		UI: &input.UI{
-			Writer: ioutil.Discard,
-			Reader: bytes.NewBufferString("BoothDuty Primary\n"),
-		},
-		PD: testNewClient(t),
-	}
-
-	defaultQuery := ""
-	name, id, err := d.GetSchedule(defaultQuery)
+	d := testNewDutyme(t, "", testScheduleName2)
+	name, id, err := d.GetSchedule("")
 	if err != nil {
 		t.Fatal("GetSchedule failed:", err)
 	}
 
-	if want := "PKM7ZY1"; id != want {
+	if want := testScheduleID2; id != want {
 		t.Fatalf("GetSchedule ID = %q, want %q", id, want)
 	}
 
-	if want := "BoothDuty Primary"; name != want {
+	if want := testScheduleName2; name != want {
 		t.Fatalf("GetSchedule name = %q, want %q", name, want)
 	}
+}
 
+func TestDutyme_Override(t *testing.T) {
+	d := testNewDutyme(t, "", "Y\n")
+	start := time.Now()
+	end := start.Add(1 * time.Hour)
+	_, err := d.Override(testScheduleID1, &User{}, start, end, false)
+	if err != nil {
+		t.Fatal("Override failed:", err)
+	}
+}
+func TestDutyme_Override_force(t *testing.T) {
+	d := testNewDutyme(t, "", "")
+	start := time.Now()
+	end := start.Add(1 * time.Hour)
+	_, err := d.Override(testScheduleID1, &User{}, start, end, true)
+	if err != nil {
+		t.Fatal("Override failed:", err)
+	}
+}
+
+func TestDutyme_Override_cancel(t *testing.T) {
+	d := testNewDutyme(t, "", "n\n")
+	start := time.Now()
+	end := start.Add(1 * time.Hour)
+	_, err := d.Override(testScheduleID1, &User{}, start, end, false)
+
+	c, ok := err.(*errCancel)
+	if !(ok && c.IsCancel()) {
+		t.Fatal("Override must be canceled")
+	}
 }
 
 func TestGetOverride(t *testing.T) {
@@ -108,7 +114,7 @@ func TestGetOverride(t *testing.T) {
 
 	if len(token) == 0 || len(email) == 0 || len(scheduleID) == 0 {
 		t.Skipf(
-			"For TestCreateOverride you must set env vars: %q, %q, %q",
+			"For TestGetOverride you need real token and email.\nSet them via env vars: %q, %q, %q",
 			EnvTestToken, EnvTestEmail, EnvTestScheduleID)
 	}
 
@@ -180,7 +186,7 @@ func TestGetOverride_withoutAsking(t *testing.T) {
 
 	if len(token) == 0 || len(email) == 0 || len(scheduleID) == 0 {
 		t.Skipf(
-			"For TestCreateOverride you must set env vars: %q, %q, %q",
+			"For TestGetOverride you need real token and email.\nSet them via env vars: %q, %q, %q",
 			EnvTestToken, EnvTestEmail, EnvTestScheduleID)
 	}
 
