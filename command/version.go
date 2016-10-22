@@ -3,6 +3,8 @@ package command
 import (
 	"bytes"
 	"fmt"
+
+	latest "github.com/tcnksm/go-latest"
 )
 
 type VersionCommand struct {
@@ -20,8 +22,25 @@ func (c *VersionCommand) Run(args []string) int {
 	if c.Revision != "" {
 		fmt.Fprintf(&buf, " (%s)", c.Revision)
 	}
-
 	fmt.Fprintln(c.OutStream, buf.String())
+
+	githubTag := &latest.GithubTag{
+		Owner:             "tcnksm",
+		Repository:        "dutyme",
+		FixVersionStrFunc: latest.DeleteFrontV(),
+	}
+
+	res, err := latest.Check(githubTag, c.Version)
+	if err != nil {
+		Debugf("Failed to check latest version: %s", err)
+		return 0
+	}
+
+	if res.Outdated {
+		fmt.Fprintln(c.OutStream,
+			"\n Your version of `dutyme` is out of date! The latest version is %s.\n"+
+				"You can donwloand it from github.com/tcnksm/dutyme", res.Latest)
+	}
 	return 0
 }
 
