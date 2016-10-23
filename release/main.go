@@ -18,12 +18,11 @@ class {{ .Name | Title }} < Formula
   homepage "https://github.com/tcnksm/{{ .Name }}"
   version 'v{{ .Version }}'
 
-  url "https://github.com/tcnksm/{{ .Name }}/releases/download/v{{ .Version }}/{{ .Name }}_darwin_amd64"
+  url "https://github.com/tcnksm/{{ .Name }}/releases/download/v{{ .Version }}/darwin_amd64.zip"
   sha256 "{{ .Sha256 }}"
 
   def install
-    bin.install '{{ .Name }}_darwin_amd64'
-    mv (bin/'{{ .Name }}_darwin_amd64'), (bin/'{{ .Name }}')
+    bin.install '{{ .Name }}'
   end
 end
 `
