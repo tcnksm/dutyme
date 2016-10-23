@@ -20,6 +20,9 @@ xbuild: deps
       -output "out/${VERSION}/{{.Dir}}_{{.OS}}_{{.Arch}}"
 	cd out/${VERSION} && shasum -a 256 * > SHASUMS && cat SHASUMS
 
+release: deps
+	go run release/main.go $(VERSION) out/$(VERSION)/dutyme_darwin_amd64
+
 test: vet
 	go test -v $$(go list ./... | grep -v 'vendor/' )
 
