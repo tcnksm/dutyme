@@ -5,7 +5,13 @@
 
 > You should receive alerts while operation on production. Take responsibility for it.
 
-`dutyme` assigns PagerDuty on-call to you while operation. 
+`dutyme` assigns PagerDuty on-call to you while you do operation or deployment.
+
+## Why?
+
+Normally, the on-call persion is fixed for a certain time (e.g., 1 week or 2 weeks) and rotated after that period. This works fine but has some issues. In working time, we deploy and operate a lot of time even though we are not the on-call. And sometimes that operation triggers alerts (because of components or because of type of job). This means no matter who the operator is, alerts are sent to the on-call persion.
+
+Who adds changes or does something can fix issue fast (because he/she knows better about that). So when alerts are fired, the operator on that time should receive alerts. And even in on-call, we nomarlly focus on our own task if there's no incident. If we receive alerts, we are disturbed. I want to avoid to disturb the primary by my operation and be disturbed by someones operation. That's why I made this tool.
 
 ## DEMO
 
@@ -26,6 +32,9 @@ $ dutyme start
 ```
 
 It asks all necessary infomation to override (your PagerDuty email address or schedule name) and creates a override layer. You can create multiple overrides on the same term (the latest one has priority). After executing, all infomation will be saved on disk so you can skip input from next time. By default, it overrides 1 hour. You can change it via `-working` flag. See more usage by `-help` flag.
+
+*NOTE*: `dutyme` uses [override](https://support.pagerduty.com/hc/en-us/articles/202830170-Creating-and-Deleting-Overrides), which allows you to make one-time adjustments to on-call schedules (It doesn't modify the existing schedules). 
+
 
 ## Install
 
