@@ -23,20 +23,15 @@ To assign, use `start` command,
 $ dutyme start
 ```
 
-It asks all necessary infomation to override (your PagerDuty email address or schedule name) and creates a override layer. You can create multiple overrides on the same term (the latest one has priority). After executing, all infomation will be saved on disk so you can skip input from next time.
-
-By default, it overrides 1 hour. You can change it via `-working` flag,
-
-```bash
-$ dutyme start -working 30m
-```
+It asks all necessary infomation to override (your PagerDuty email address or schedule name) and creates a override layer. You can create multiple overrides on the same term (the latest one has priority). After executing, all infomation will be saved on disk so you can skip input from next time. By default, it overrides 1 hour. You can change it via `-working` flag. See more usage by `-help` flag.
 
 ## Install
 
-To install, use `go get`:
+To install, you can use `go get` or `brew`:
 
 ```bash
-$ go get github.com/tcnksm/dutyme
+$ brew tap tcnksm/dutyme
+$ brew install dutyme
 ```
 
 ## Contribution
