@@ -5,7 +5,9 @@
 
 > You should receive alerts while operation on production. Take responsibility for it.
 
-`dutyme` assigns PagerDuty on-call to yourself while operation. It creates [override layer](https://support.pagerduty.com/hc/en-us/articles/202830170-Creating-and-Deleting-Overrides) on the existing schedule. *NOTE*: `dutyme` is still under development. command interface maybe updated in future.
+`dutyme` assigns PagerDuty on-call to you while operation. 
+
+## DEMO
 
 ![](/doc/dutyme.gif)
 
