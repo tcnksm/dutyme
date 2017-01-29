@@ -11,6 +11,7 @@ import (
 type Restriction struct {
 	Type            string `json:"type,omitempty"`
 	StartTimeOfDay  string `json:"start_time_of_day,omitempty"`
+	StartDayOfWeek  uint   `json:"start_day_of_week,omitempty"`
 	DurationSeconds uint   `json:"duration_seconds,omitempty"`
 }
 
@@ -180,17 +181,15 @@ func (c *Client) ListOverrides(id string, o ListOverridesOptions) ([]Override, e
 	if err != nil {
 		return nil, err
 	}
-
-	result := struct {
-		Total     int
-		Overrides []Override
-	}{}
-
+	var result map[string][]Override
 	if err := c.decodeJSON(resp, &result); err != nil {
 		return nil, err
 	}
-
-	return result.Overrides, nil
+	overrides, ok := result["overrides"]
+	if !ok {
+		return nil, fmt.Errorf("JSON response does not have overrides field")
+	}
+	return overrides, nil
 }
 
 // CreateOverride creates an override for a specific user covering the specified time range.
